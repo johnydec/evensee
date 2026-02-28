@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auth Header Capture — One-click auth for your dev tools</title>
+<meta name="description" content="Capture authentication headers from any website with one click. Ready-to-paste JSON for Playwright, curl, Postman, and AI agents.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#050507;
+  --surface:#0e0e12;
+  --surface-2:#141418;
+  --border:#1e1e24;
+  --border-hover:#2a2a32;
+  --text:#f0f0f2;
+  --text-2:#9ca3af;
+  --text-3:#5b6170;
+  --green:#34d399;
+  --green-dim:rgba(52,211,153,.08);
+  --green-border:rgba(52,211,153,.18);
+  --amber:#fbbf24;
+  --blue:#60a5fa;
+  --radius:12px;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--bg);
+  color:var(--text-2);
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ── Grain overlay ── */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  pointer-events:none;
+  opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size:128px 128px;
+}
+
+/* ── Layout ── */
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+section{padding:100px 0}
+
+/* ── Nav ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 24px;
+  background:rgba(5,5,7,.8);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+nav .inner{
+  max-width:1080px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:10px;
+  color:var(--text);font-weight:700;font-size:15px;
+  letter-spacing:-.02em;text-decoration:none;
+}
+.nav-logo svg{color:var(--green);opacity:.7}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links a{
+  color:var(--text-2);text-decoration:none;font-size:14px;font-weight:500;
+  padding:8px 14px;border-radius:8px;transition:all .15s;
+}
+.nav-links a:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.btn-chrome{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 20px;border-radius:100px;
+  background:var(--text);color:#000;
+  font-family:inherit;font-size:14px;font-weight:600;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:all .2s;letter-spacing:-.01em;
+}
+.btn-chrome:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(255,255,255,.12)}
+.btn-chrome:active{transform:translateY(0)}
+.btn-chrome svg{opacity:.5}
+.btn-support{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 18px;border-radius:100px;
+  background:transparent;color:var(--text-2);
+  font-family:inherit;font-size:14px;font-weight:500;
+  text-decoration:none;border:1px solid var(--border);
+  transition:all .2s;
+}
+.btn-support:hover{border-color:var(--amber);color:var(--amber);background:rgba(251,191,36,.05)}
+
+/* ── Hero ── */
+.hero{
+  padding:160px 0 80px;
+  text-align:center;
+  position:relative;
+}
+.hero::before{
+  content:'';position:absolute;top:60px;left:50%;transform:translateX(-50%);
+  width:600px;height:400px;
+  background:radial-gradient(ellipse,rgba(52,211,153,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px 6px 10px;border-radius:100px;
+  background:var(--green-dim);border:1px solid var(--green-border);
+  color:var(--green);font-size:13px;font-weight:600;
+  margin-bottom:28px;letter-spacing:-.01em;
+  animation:fadeUp .6s ease both;
+}
+.hero-badge svg{opacity:.6}
+h1{
+  font-size:clamp(40px,6vw,68px);
+  font-weight:800;
+  color:var(--text);
+  line-height:1.08;
+  letter-spacing:-.04em;
+  margin-bottom:20px;
+  animation:fadeUp .6s ease .1s both;
+}
+h1 .grad{
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{
+  font-size:clamp(17px,2vw,20px);
+  color:var(--text-3);
+  max-width:560px;
+  margin:0 auto 36px;
+  line-height:1.55;
+  animation:fadeUp .6s ease .2s both;
+}
+.hero-actions{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  animation:fadeUp .6s ease .3s both;
+  flex-wrap:wrap;
+}
+
+/* ── Popup mockup ── */
+.popup-showcase{
+  margin:60px auto 0;
+  max-width:400px;
+  animation:fadeUp .8s ease .4s both;
+  position:relative;
+}
+.popup-showcase::before{
+  content:'';position:absolute;inset:-40px;
+  background:radial-gradient(ellipse,rgba(52,211,153,.04) 0%,transparent 70%);
+  pointer-events:none;border-radius:40px;
+}
+.popup-mock{
+  background:#0a0a0c;
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 20px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03);
+  position:relative;
+}
+.popup-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 10px;
+}
+.popup-logo{
+  display:flex;align-items:center;gap:7px;
+  color:var(--text);font-size:13px;font-weight:600;
+}
+.popup-logo svg{opacity:.6}
+.popup-pill{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;color:var(--green);
+  background:var(--green-dim);border:1px solid var(--green-border);
+  padding:3px 9px 3px 7px;border-radius:100px;font-weight:500;
+}
+.popup-pill svg{opacity:.7}
+.popup-site{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:0 16px;padding:10px 12px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
+}
+.popup-site-info{display:flex;flex-direction:column;gap:1px}
+.popup-site-domain{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.popup-site-hint{font-size:11px;color:var(--text-3)}
+.popup-capture-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 16px;border-radius:100px;border:none;
+  background:var(--green);color:#000;
+  font-size:12px;font-weight:600;cursor:default;
+}
+.popup-capture-btn svg{opacity:.5}
+.popup-status{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px;font-size:12px;color:var(--text-3);
+}
+.popup-dot{
+  width:6px;height:6px;background:var(--green);border-radius:50%;
+  animation:pulse 2s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.popup-card{
+  margin:6px 16px;background:var(--surface-2);
+  border:1px solid var(--green-border);border-radius:10px;
+  overflow:hidden;
+  animation:mockFlash 3s ease infinite;
+}
+@keyframes mockFlash{
+  0%,100%{border-color:var(--border);box-shadow:none}
+  50%{border-color:var(--green-border);box-shadow:0 0 20px rgba(52,211,153,.06)}
+}
+.popup-card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;
+}
+.popup-card-left{display:flex;align-items:center;gap:10px}
+.popup-fav{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+  background:rgba(34,197,94,.1);color:#22c55e;
+  position:relative;
+}
+.popup-fav-badge{
+  position:absolute;top:-3px;right:-3px;
+  width:14px;height:14px;background:var(--green);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--surface-2);
+}
+.popup-fav-badge svg{width:8px;height:8px}
+.popup-card-domain{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.popup-card-sub{font-size:11px;color:var(--text-3)}
+.popup-card-body{border-top:1px solid var(--border)}
+.popup-hrow{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:12px;
+}
+.popup-hrow:last-child{border-bottom:none}
+.popup-hname{color:var(--text-3);font-weight:500;text-transform:uppercase;font-size:10px;letter-spacing:.05em}
+.popup-hval{
+  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3);
+}
+.popup-footer{
+  padding:10px 16px 14px;display:flex;flex-direction:column;gap:6px;
+}
+.popup-copy-btn{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:8px 0;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface-2);color:var(--text);
+  font-size:12px;font-weight:500;cursor:default;
+}
+.popup-copy-btn svg{opacity:.4}
+
+/* ── Section headings ── */
+.section-label{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--green);
+  margin-bottom:16px;
+}
+.section-label svg{opacity:.5}
+h2{
+  font-size:clamp(28px,4vw,42px);
+  font-weight:800;color:var(--text);
+  line-height:1.12;letter-spacing:-.03em;
+  margin-bottom:16px;
+}
+.section-sub{
+  font-size:17px;color:var(--text-3);
+  max-width:520px;line-height:1.6;
+}
+
+/* ── How it works ── */
+.steps{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+  margin-top:56px;background:var(--border);
+  border:1px solid var(--border);border-radius:16px;overflow:hidden;
+}
+.step{
+  background:var(--surface);padding:32px 28px;
+  position:relative;
+}
+.step-num{
+  display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:8px;
+  background:var(--green-dim);border:1px solid var(--green-border);
+  color:var(--green);font-size:14px;font-weight:700;
+  margin-bottom:20px;
+  font-family:'JetBrains Mono',monospace;
+}
+.step h3{
+  font-size:16px;font-weight:700;color:var(--text);
+  margin-bottom:8px;letter-spacing:-.01em;
+}
+.step p{font-size:14px;color:var(--text-3);line-height:1.55}
+.step-code{
+  margin-top:16px;padding:12px 14px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;overflow-x:auto;
+}
+.step-code code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;line-height:1.6;color:var(--text-2);
+  white-space:pre;
+}
+.step-code .kw{color:var(--blue)}
+.step-code .str{color:var(--green)}
+.step-code .cm{color:var(--text-3)}
+
+/* ── Use cases ── */
+.usecases{
+  display:grid;grid-template-columns:1fr 1fr;gap:2px;
+  margin-top:56px;background:var(--border);
+  border:1px solid var(--border);border-radius:16px;overflow:hidden;
+}
+.usecase{background:var(--surface);padding:36px 32px}
+.usecase-icon{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;
+}
+.usecase-icon.ai{background:rgba(96,165,250,.08);color:var(--blue);border:1px solid rgba(96,165,250,.15)}
+.usecase-icon.api{background:rgba(251,191,36,.08);color:var(--amber);border:1px solid rgba(251,191,36,.15)}
+.usecase h3{
+  font-size:18px;font-weight:700;color:var(--text);
+  margin-bottom:8px;letter-spacing:-.01em;
+}
+.usecase p{font-size:14px;color:var(--text-3);line-height:1.6;margin-bottom:16px}
+.usecase-tags{display:flex;flex-wrap:wrap;gap:6px}
+.usecase-tag{
+  font-size:12px;font-weight:500;color:var(--text-3);
+  padding:4px 10px;border-radius:6px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+}
+
+/* ── Features grid ── */
+.features{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+  margin-top:56px;background:var(--border);
+  border:1px solid var(--border);border-radius:16px;overflow:hidden;
+}
+.feature{background:var(--surface);padding:28px 24px}
+.feature svg{color:var(--green);opacity:.6;margin-bottom:14px}
+.feature h4{
+  font-size:14px;font-weight:700;color:var(--text);
+  margin-bottom:6px;letter-spacing:-.01em;
+}
+.feature p{font-size:13px;color:var(--text-3);line-height:1.55}
+
+/* ── Security ── */
+.security-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+  margin-top:56px;background:var(--border);
+  border:1px solid var(--border);border-radius:16px;overflow:hidden;
+}
+.security-item{
+  background:var(--surface);padding:32px 28px;
+  text-align:center;
+}
+.security-icon{
+  width:48px;height:48px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+  background:var(--green-dim);border:1px solid var(--green-border);
+  color:var(--green);
+}
+.security-item h4{
+  font-size:15px;font-weight:700;color:var(--text);
+  margin-bottom:6px;letter-spacing:-.01em;
+}
+.security-item p{font-size:13px;color:var(--text-3);line-height:1.5}
+
+/* ── CTA ── */
+.cta-section{
+  text-align:center;padding:80px 0 60px;
+  position:relative;
+}
+.cta-section::before{
+  content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:500px;height:300px;
+  background:radial-gradient(ellipse,rgba(52,211,153,.04) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cta-actions{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  margin-top:32px;flex-wrap:wrap;
+}
+
+/* ── Footer ── */
+footer{
+  border-top:1px solid var(--border);
+  padding:32px 0;text-align:center;
+}
+.footer-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  max-width:1080px;margin:0 auto;padding:0 24px;
+}
+.footer-left{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;color:var(--text-3);
+}
+.footer-left svg{color:var(--green);opacity:.5}
+.footer-links{display:flex;gap:16px}
+.footer-links a{
+  font-size:13px;color:var(--text-3);text-decoration:none;
+  transition:color .15s;
+}
+.footer-links a:hover{color:var(--text)}
+
+/* ── Animations ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.reveal{opacity:0;transform:translateY(20px);transition:all .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  nav .nav-links a:not(.btn-chrome){display:none}
+  .hero{padding:120px 0 60px}
+  .steps{grid-template-columns:1fr}
+  .usecases{grid-template-columns:1fr}
+  .features{grid-template-columns:1fr}
+  .security-grid{grid-template-columns:1fr}
+  .popup-showcase{max-width:340px;margin:40px auto 0}
+  .footer-inner{flex-direction:column;gap:16px}
+  section{padding:60px 0}
+}
+@media(max-width:480px){
+  .hero-actions{flex-direction:column;width:100%}
+  .hero-actions a,.hero-actions button{width:100%;justify-content:center}
+  .cta-actions{flex-direction:column;width:100%}
+  .cta-actions a{width:100%;justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="inner">
+    <a href="#" class="nav-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Auth Header Capture
+    </a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#usecases">Use cases</a>
+      <a href="#security">Security</a>
+      <a href="#" class="btn-chrome">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+        Add to Chrome
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Zero network &middot; Memory only &middot; Open source
+    </div>
+
+    <h1>Your auth headers.<br><span class="grad">One click away.</span></h1>
+
+    <p class="hero-sub">
+      Capture cookies, tokens, and auth headers from any website.
+      Paste into Playwright, curl, Postman, or hand them to your AI agent.
+      No passwords shared. Ever.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#" class="btn-chrome">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+        Add to Chrome &mdash; Free
+      </a>
+      <a href="https://buymeacoffee.com/evensee" class="btn-support" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        Support &mdash; $1
+      </a>
+    </div>
+
+    <!-- Popup mockup -->
+    <div class="popup-showcase">
+      <div class="popup-mock">
+        <div class="popup-header">
+          <div class="popup-logo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Auth Capture
+          </div>
+          <div class="popup-pill">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Local only
+          </div>
+        </div>
+
+        <div class="popup-site">
+          <div class="popup-site-info">
+            <div class="popup-site-domain">rohlik.cz</div>
+            <div class="popup-site-hint">3 headers captured</div>
+          </div>
+          <div class="popup-capture-btn">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6,3 20,12 6,21"/></svg>
+            Capture
+          </div>
+        </div>
+
+        <div class="popup-status">
+          <div class="popup-dot"></div>
+          <span>Listening for auth headers...</span>
+        </div>
+
+        <div class="popup-card">
+          <div class="popup-card-head">
+            <div class="popup-card-left">
+              <div class="popup-fav">
+                RO
+                <div class="popup-fav-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+              <div>
+                <div class="popup-card-domain">rohlik.cz</div>
+                <div class="popup-card-sub">3 headers &middot; just now</div>
+              </div>
+            </div>
+          </div>
+          <div class="popup-card-body">
+            <div class="popup-hrow">
+              <span class="popup-hname">Authorization</span>
+              <span class="popup-hval">Bear&bull;&bull;&bull;&bull;eyJ1</span>
+            </div>
+            <div class="popup-hrow">
+              <span class="popup-hname">Cookie</span>
+              <span class="popup-hval">sess&bull;&bull;&bull;&bull;d4f2</span>
+            </div>
+            <div class="popup-hrow">
+              <span class="popup-hname">X-CSRF-Token</span>
+              <span class="popup-hval">a8f2&bull;&bull;&bull;&bull;c901</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="popup-footer">
+          <div class="popup-copy-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy All Sessions
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how">
+  <div class="wrap">
+    <div class="section-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+      How it works
+    </div>
+    <h2>Three clicks to<br>authenticated access</h2>
+    <p class="section-sub">No passwords. No login flows. No browser profiles. Just the headers you need.</p>
+
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Browse & click Capture</h3>
+        <p>Open any site where you're logged in. Click the extension icon and hit Capture. The page auto-reloads to trigger fresh requests.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Headers captured</h3>
+        <p>Auth headers appear instantly &mdash; Authorization, Cookie, CSRF tokens, session IDs. Auto-stops when done. Green check confirms it.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Copy & paste</h3>
+        <p>One click copies ready-to-use JSON. Paste directly into your code, HTTP client, or hand it to an AI agent.</p>
+        <div class="step-code">
+<code><span class="cm">// Playwright</span>
+<span class="kw">await</span> page.setExtraHTTPHeaders({
+  <span class="str">"Authorization"</span>: <span class="str">"Bearer eyJ..."</span>,
+  <span class="str">"Cookie"</span>: <span class="str">"session=abc..."</span>
+});</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Use cases -->
+<section id="usecases">
+  <div class="wrap">
+    <div class="section-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Use cases
+    </div>
+    <h2>Built for developers<br>who move fast</h2>
+    <p class="section-sub">Two common problems. One simple solution.</p>
+
+    <div class="usecases reveal">
+      <div class="usecase">
+        <div class="usecase-icon ai">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1.27c.34-.6.99-1 1.73-1a2 2 0 0 1 0 4c-.74 0-1.39-.4-1.73-1H21v1a7 7 0 0 1-7 7h-1v1.27c.6.34 1 .99 1 1.73a2 2 0 0 1-4 0c0-.74.4-1.39 1-1.73V18h-1a7 7 0 0 1-7-7H1.73C1.39 11.6.74 12 0 12a2 2 0 0 1 0-4c.74 0 1.39.4 1.73 1H3v-1a7 7 0 0 1 7-7h1V3.73C10.4 3.39 10 2.74 10 2a2 2 0 0 1 2-2z"/></svg>
+        </div>
+        <h3>AI coding agents</h3>
+        <p>Your AI agent needs to browse authenticated pages &mdash; scrape a dashboard, test a flow, check a deployment. Sharing your password is unsafe. This gives them just the session, nothing more.</p>
+        <div class="step-code" style="margin-top:16px">
+<code><span class="cm">// Give Claude your session</span>
+<span class="kw">const</span> auth = <span class="str">/* paste from extension */</span>;
+<span class="kw">const</span> ctx = <span class="kw">await</span> browser.newContext({
+  extraHTTPHeaders: auth.headers
+});</code>
+        </div>
+        <div class="usecase-tags" style="margin-top:16px">
+          <span class="usecase-tag">Claude</span>
+          <span class="usecase-tag">Cursor</span>
+          <span class="usecase-tag">Copilot</span>
+          <span class="usecase-tag">Playwright</span>
+          <span class="usecase-tag">Puppeteer</span>
+        </div>
+      </div>
+
+      <div class="usecase">
+        <div class="usecase-icon api">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h3>API debugging</h3>
+        <p>Need to hit an authenticated API endpoint without re-implementing the login flow? Capture the auth headers from your browser session and paste them straight into your HTTP client.</p>
+        <div class="step-code" style="margin-top:16px">
+<code><span class="cm"># Skip the login, hit the API</span>
+curl -H <span class="str">"Authorization: Bearer eyJ..."</span> \
+     -H <span class="str">"Cookie: session=abc..."</span> \
+     https://api.example.com/users/me</code>
+        </div>
+        <div class="usecase-tags" style="margin-top:16px">
+          <span class="usecase-tag">curl</span>
+          <span class="usecase-tag">httpie</span>
+          <span class="usecase-tag">Postman</span>
+          <span class="usecase-tag">Insomnia</span>
+          <span class="usecase-tag">Bruno</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="wrap">
+    <div class="section-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Features
+    </div>
+    <h2>Everything you need,<br>nothing you don't</h2>
+
+    <div class="features reveal">
+      <div class="feature">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <h4>Auto-capture</h4>
+        <p>Listens for auth headers on any request. Auto-stops when captured. No manual selection needed.</p>
+      </div>
+      <div class="feature">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <h4>One-click copy</h4>
+        <p>Copy as JSON ready for Playwright, curl, or any HTTP client. No reformatting needed.</p>
+      </div>
+      <div class="feature">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <h4>Multi-domain</h4>
+        <p>Capture from multiple sites at once. Each session tracked separately with its own card.</p>
+      </div>
+      <div class="feature">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <h4>Smart detection</h4>
+        <p>Warns you about protected sites (Facebook, Google) where header replay won't work.</p>
+      </div>
+      <div class="feature">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <h4>Auto-clear</h4>
+        <p>Headers auto-delete after 5 minutes. Clipboard clears after 30 seconds. Configurable.</p>
+      </div>
+      <div class="feature">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        <h4>Tab-scoped</h4>
+        <p>Only captures from the specific tab and domain you choose. No background monitoring.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Security -->
+<section id="security">
+  <div class="wrap">
+    <div class="section-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Security
+    </div>
+    <h2>Paranoid by design</h2>
+    <p class="section-sub">We handle your most sensitive data &mdash; auth tokens. Here's why you can trust us.</p>
+
+    <div class="security-grid reveal">
+      <div class="security-item">
+        <div class="security-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h4>Memory only</h4>
+        <p>Headers live in the service worker's memory. Never written to disk, localStorage, or any persistent storage. Close Chrome and they're gone.</p>
+      </div>
+      <div class="security-item">
+        <div class="security-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <h4>Zero network calls</h4>
+        <p>The extension makes exactly zero HTTP requests. No analytics, no telemetry, no external servers. Check the source code yourself.</p>
+      </div>
+      <div class="security-item">
+        <div class="security-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h4>Auto-destruct</h4>
+        <p>Captured headers auto-delete after 5 minutes. Clipboard auto-clears after 30 seconds. Both configurable &mdash; or set to manual.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="wrap">
+    <h2>Stop sharing passwords.<br>Start sharing sessions.</h2>
+    <p class="section-sub" style="margin:16px auto 0">Free, open source, and built for developers who value their time and security.</p>
+    <div class="cta-actions">
+      <a href="#" class="btn-chrome">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+        Add to Chrome &mdash; Free
+      </a>
+      <a href="https://buymeacoffee.com/evensee" class="btn-support" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        Buy me a coffee
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Auth Header Capture &middot; Built by a dev, for devs.
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://buymeacoffee.com/evensee" target="_blank" rel="noopener">Support</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }});
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Smooth nav highlight
+document.querySelectorAll('nav a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>
